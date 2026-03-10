@@ -1,0 +1,25 @@
+Key,Value,Description
+DOMAIN,your-domain.example,Allowed email domain for organization users.
+WEB_APP_URL,https://script.google.com/macros/s/YOUR_WEBAPP_DEPLOYMENT_ID/exec,Base deployed web app URL.
+APP_URL,https://script.google.com/macros/s/YOUR_WEBAPP_DEPLOYMENT_ID/exec,Legacy runtime base URL kept for backward compatibility.
+REQUEST_URL,https://script.google.com/macros/s/YOUR_WEBAPP_DEPLOYMENT_ID/exec?page=request,Direct link to the request form.
+TRACK_URL,https://script.google.com/macros/s/YOUR_WEBAPP_DEPLOYMENT_ID/exec?page=track,Direct link to the tracking search page.
+TECH_URL,https://script.google.com/macros/s/YOUR_WEBAPP_DEPLOYMENT_ID/exec?page=tech,Direct link to the tech dashboard.
+APPROVAL_URL,https://script.google.com/macros/s/YOUR_WEBAPP_DEPLOYMENT_ID/exec?page=approval,Direct link to the approval dashboard.
+FINANCE_URL,https://script.google.com/macros/s/YOUR_WEBAPP_DEPLOYMENT_ID/exec?page=finance,Direct link to the finance dashboard.
+IT_RECIPIENTS,tech.lead@your-domain.example,Primary comma-separated IT notification recipients.
+TECH_EMAILS,tech.lead@your-domain.example,Legacy tech-recipient key retained for backward compatibility.
+DEFAULT_TECH_EMAIL,tech.lead@your-domain.example,Fallback tech email.
+FINANCE_RECIPIENTS,finance@your-domain.example,Primary finance notification recipients.
+FINANCE_EMAILS,finance@your-domain.example,Legacy finance-recipient key retained for backward compatibility.
+FINANCE_EMAIL,finance@your-domain.example,Single finance fallback value for older logic.
+APPROVER_EMAIL_TEST,approver@your-domain.example,Approver inbox for TEST mode.
+APPROVER_EMAIL_LIVE,approver@your-domain.example,Approver inbox for LIVE mode.
+APPROVER_MODE,TEST,Approval routing mode.
+REMINDER_COOLDOWN_HOURS,12,Minimum hours between reminder emails for the same request.
+REQUESTER_CC,,Optional CC recipients for requester-facing emails.
+ADMIN_EMAILS,admin@your-domain.example,Admin users with full dashboard access.
+SEND_FINANCE_ON_SUBMISSION,Y,Legacy compatibility flag retained by runtime.
+WAITLIST_REMINDER_EMAIL,waitlist@your-domain.example,Optional waitlist reminder recipient.
+ALLOW_REQUESTER_CANCEL,Y,Allow requesters to cancel eligible requests from tracking.
+

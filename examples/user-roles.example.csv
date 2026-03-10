@@ -1,0 +1,7 @@
+Email,Name,IsAdmin,IsTech,IsApprover,IsFinance,Active,Notes
+admin@your-domain.example,Master Admin,Y,Y,Y,Y,Y,Full access example account
+tech.lead@your-domain.example,Operations Lead,N,Y,Y,Y,Y,Example multi-role operations user
+tech.ops@your-domain.example,Technician,N,Y,N,N,Y,Example tech-only user
+approver@your-domain.example,Approver,N,N,Y,N,Y,Example approver-only user
+finance@your-domain.example,Finance Reviewer,N,N,N,Y,Y,Example finance-only user
+
