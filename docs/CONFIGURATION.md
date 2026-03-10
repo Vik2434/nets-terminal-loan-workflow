@@ -11,6 +11,8 @@ This project uses two configuration layers:
 2. `Config` sheet
    - runtime source of truth for URLs, recipients, domain, and feature flags
 
+The current codebase does not use Apps Script script properties. Future maintainers should treat the `Config` sheet as the primary runtime configuration surface.
+
 ## Required Replacements Before Real Use
 
 ### In Config.gs
@@ -19,6 +21,8 @@ Replace:
 
 - `NLF.SS_ID`
 - any remaining placeholder publication defaults you do not want seeded into the spreadsheet
+
+If you are using a container-bound project, `NLF.SS_ID` may remain a placeholder during initial setup, but a real value is still recommended for long-term portability.
 
 ### In the Config Sheet
 
@@ -100,8 +104,15 @@ These placeholders are intentionally non-operational:
 
 This prevents accidental use of public template values in a live environment.
 
+## Apps Script-Specific Notes
+
+- Script properties are not required by the current implementation.
+- Deployment URLs are expected in the `Config` sheet after the first web app deployment.
+- Spreadsheet connectivity is controlled by `NLF.SS_ID` first, then `SpreadsheetApp.getActiveSpreadsheet()` as a bound-script fallback.
+- The repository remains flat because Apps Script HtmlService includes depend on filename-based resolution.
+
 ## Example Files
 
 - [../examples/config-sheet.example.csv](../examples/config-sheet.example.csv)
 - [../examples/user-roles.example.csv](../examples/user-roles.example.csv)
-
+- [APPS_SCRIPT.md](APPS_SCRIPT.md)

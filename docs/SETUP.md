@@ -18,6 +18,8 @@ This guide walks a new maintainer through setting up the workflow from scratch.
 4. Replace the placeholder spreadsheet ID in `Config.gs`.
 5. Save the project.
 
+Use this option if you want a container-bound Apps Script project. In that model, the code can fall back to `SpreadsheetApp.getActiveSpreadsheet()` during setup.
+
 ### Option B: Local Development with clasp
 
 1. Clone this repository locally.
@@ -25,6 +27,8 @@ This guide walks a new maintainer through setting up the workflow from scratch.
 3. Replace `YOUR_SCRIPT_ID` with the Apps Script project ID.
 4. Replace the placeholder spreadsheet ID in `Config.gs`.
 5. Push with `clasp push`.
+
+Use this option if you want a standalone Apps Script project managed from source control. In that model, `NLF.SS_ID` must point to the spreadsheet the app should use.
 
 ## First-Time Configuration
 
@@ -35,6 +39,8 @@ Before running the app in a real environment:
    - `YOUR_SPREADSHEET_ID`
    - any placeholder publication defaults you want to change before setup
 3. Save the project.
+
+If you plan to keep the script container-bound, you can still leave the placeholder temporarily and rely on the active spreadsheet fallback during initial setup.
 
 ## Run Initial Setup
 
@@ -93,3 +99,4 @@ If you want overdue reminders:
 2. Choose an interval appropriate for your support model.
 3. Verify `REMINDER_COOLDOWN_HOURS` in the `Config` sheet.
 
+There are no required script properties for this repository. The project uses the `Config` sheet instead of `PropertiesService`.

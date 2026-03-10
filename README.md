@@ -35,6 +35,21 @@ This project supports a lightweight internal workflow for shared payment termina
 - LockService for write-path coordination
 - Optional `clasp` workflow for source control and deployment
 
+## Apps Script Repository Mode
+
+This repository is primarily a raw Apps Script source export with optional `clasp` support.
+
+- Active `.gs` and `.html` files live in the repository root.
+- The flat file layout is preserved intentionally because HtmlService template names and `include()` calls rely on these filenames.
+- `.clasp.json.example` is included so the same repository can also be used with `clasp`.
+- [appsscript.json](appsscript.json) documents the intended manifest settings for version-controlled deployments.
+
+This means:
+
+- do not move active template files into nested folders unless you also update every HtmlService include/reference
+- keep wrapper files like `Request.html` and `Finance Portal.html` unless you intentionally remove backward-compatible entry points
+- treat the current root layout as the deployment layout
+
 ## Repository Structure
 
 The flat root file layout is intentional. Apps Script template includes and runtime file names depend on the current naming convention.
@@ -103,6 +118,7 @@ Examples:
 - [examples/config-sheet.example.csv](examples/config-sheet.example.csv)
 - [examples/user-roles.example.csv](examples/user-roles.example.csv)
 - [.clasp.json.example](.clasp.json.example)
+- [docs/APPS_SCRIPT.md](docs/APPS_SCRIPT.md)
 
 ## Deployment Guide
 
@@ -119,6 +135,20 @@ After deploying:
 4. Add an optional time-driven trigger for `sendOverdueLoanReminders`.
 
 See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for the full checklist.
+
+## Spreadsheet Connection Model
+
+The runtime connects to Sheets in this order:
+
+1. use `NLF.SS_ID` from [Config.gs](Config.gs) if it is a real spreadsheet ID
+2. otherwise fall back to `SpreadsheetApp.getActiveSpreadsheet()` if the Apps Script project is container-bound
+
+This allows the same codebase to work in either of these models:
+
+- standalone Apps Script project pointing at a spreadsheet by ID
+- container-bound Apps Script project attached directly to a spreadsheet
+
+The `Config` sheet inside that spreadsheet becomes the runtime source of truth for page URLs, recipients, and feature flags.
 
 ## Usage Guide
 
@@ -172,6 +202,7 @@ Suggested additions if you want to publish visuals later:
 ## Additional Documentation
 
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+- [docs/APPS_SCRIPT.md](docs/APPS_SCRIPT.md)
 - [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)
 - [docs/ONBOARDING.md](docs/ONBOARDING.md)
 - [docs/wiki/Home.md](docs/wiki/Home.md)
@@ -179,4 +210,3 @@ Suggested additions if you want to publish visuals later:
 ## Credits
 
 Prepared as a reusable public template for Google Apps Script workflow maintenance and long-term version control.
-

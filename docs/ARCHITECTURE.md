@@ -4,6 +4,8 @@
 
 This application is a Google Apps Script web app backed by Google Sheets. The runtime uses HtmlService templates for the UI and server-side `.gs` files for data access, workflow logic, access control, and email notifications.
 
+The repository is intentionally kept in the raw Apps Script file style rather than a transformed build tree. That preserves HtmlService template naming and Apps Script deployment compatibility.
+
 ## Main Components
 
 | Area | Files | Responsibility |
@@ -31,6 +33,11 @@ The project expects these sheets:
 | `Config` | Runtime configuration, URLs, recipients, feature flags |
 | `Email_Log` | Basic email audit log |
 | `User_Roles` | Role-based access control |
+
+Connection behavior:
+
+- primary: spreadsheet ID from `Config.gs`
+- fallback: active spreadsheet when the script is container-bound
 
 ## Runtime Flow
 
@@ -109,3 +116,12 @@ flowchart TD
 - `ScriptApp`
 - `Utilities`
 
+## Script Properties
+
+The current codebase does not use `PropertiesService`.
+
+There are no required script properties for setup or deployment. Runtime configuration is managed through:
+
+- `Config.gs`
+- `Config` sheet
+- `User_Roles` sheet

@@ -13,6 +13,11 @@ This aligns with the current access-control model, which uses:
 - `User_Roles`
 - configured domain checks
 
+The repository supports both:
+
+- container-bound scripts attached to the spreadsheet
+- standalone scripts that open the spreadsheet by ID
+
 ## Deployment Steps
 
 1. Complete the setup in [SETUP.md](SETUP.md).
@@ -21,6 +26,12 @@ This aligns with the current access-control model, which uses:
 4. Choose `Web app`.
 5. Set the execution and access settings.
 6. Copy the deployed URL.
+
+If you are using `clasp`, make sure:
+
+1. `.clasp.json` points to the correct Apps Script project
+2. `clasp push` has been run successfully
+3. the manifest in [../appsscript.json](../appsscript.json) is present in the remote project
 
 ## Update Config After Deployment
 
@@ -71,9 +82,15 @@ If you want reminder automation:
 2. Choose a schedule that fits your operations.
 3. Confirm `WAITLIST_REMINDER_EMAIL` and `REMINDER_COOLDOWN_HOURS`.
 
+Required trigger summary:
+
+- `onOpen()` is a simple trigger for the spreadsheet menu
+- `doGet(e)` is the web app entry point
+- `sendOverdueLoanReminders()` is optional and must be created manually if desired
+
 ## Deployment Safety Tips
 
 - Keep a separate non-production spreadsheet for testing changes.
 - Avoid changing the sheet schema manually; prefer `setupNetsLoanForm()`.
 - Re-deploy after updating server-side code that affects routing, templates, access control, or email links.
-
+- There are no required script properties in the current implementation.
