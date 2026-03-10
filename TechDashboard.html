@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <?!= include('Styles'); ?>
+  <style>
+    .panel-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .panel-kicker {
+      margin: 0 0 8px;
+      font-size: 11px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: #8c1d2d;
+      font-weight: 800;
+    }
+
+    .tech-layout {
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .summary-grid {
+      display: grid;
+      gap: 8px;
+    }
+    .summary-row {
+      display: grid;
+      grid-template-columns: 118px 1fr;
+      gap: 8px;
+      font-size: 13px;
+      line-height: 1.4;
+      padding-bottom: 8px;
+      border-bottom: 1px dashed #e5ecf5;
+    }
+    .summary-row:last-child {
+      border-bottom: 0;
+      padding-bottom: 0;
+    }
+    .summary-key {
+      color: #607086;
+      font-weight: 700;
+    }
+    .summary-value {
+      color: #213044;
+      font-weight: 600;
+      word-break: break-word;
+    }
+
+    .workflow-list {
+      display: grid;
+      gap: 10px;
+    }
+    .workflow-step {
+      display: grid;
+      grid-template-columns: 20px 1fr;
+      gap: 10px;
+      align-items: start;
+      padding: 8px 10px;
+      border-radius: 10px;
+      background: #f8fbff;
+      border: 1px solid #e1e8f2;
+    }
+    .workflow-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 999px;
+      margin-top: 2px;
+      border: 2px solid #c2cede;
+      background: #fff;
+    }
+    .workflow-step strong {
+      display: inline-block;
+      margin-bottom: 2px;
+    }
+    .workflow-step.pending {
+      opacity: .92;
+    }
+    .workflow-step.done .workflow-dot { background: #1f8f5f; border-color: #1f8f5f; }
+    .workflow-step.active .workflow-dot { background: #8c1d2d; border-color: #8c1d2d; }
+
+    .terminal-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .terminal-card {
+      border: 1px solid #d7e0ec;
+      border-radius: 12px;
+      padding: 12px;
+      cursor: pointer;
+      background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+      transition: border-color .15s ease, box-shadow .15s ease;
+    }
+    .terminal-card:hover { border-color: #8c1d2d; }
+    .terminal-card.selected {
+      border-color: #8c1d2d;
+      box-shadow: 0 0 0 2px rgba(140, 29, 45, 0.18);
+    }
+    .terminal-card.unavailable {
+      background: #f8fafd;
+    }
+    .terminal-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .terminal-ident {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+    .terminal-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: #edf2fb;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #51637b;
+      font-size: 14px;
+      font-weight: 800;
+      flex: 0 0 auto;
+    }
+    .terminal-title { font-weight: 800; margin: 0; }
+    .status-tag {
+      display: inline-block;
+      border-radius: 999px;
+      padding: 4px 9px;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .status-tag.available { background: #e7f9ef; color: #14593d; }
+    .status-tag.in-use { background: #fff4e8; color: #9a4e00; }
+    .status-tag.maintenance { background: #edf2f8; color: #43546b; }
+    .terminal-meta-grid {
+      display: grid;
+      gap: 6px;
+      margin: 8px 0 10px;
+    }
+    .terminal-meta-row {
+      display: grid;
+      grid-template-columns: 86px 1fr;
+      gap: 8px;
+      font-size: 12px;
+      color: #44556e;
+    }
+    .terminal-meta-key { color: #607086; font-weight: 700; }
+    .terminal-meta-val { color: #2a3a4e; font-weight: 600; word-break: break-word; }
+    .status-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 8px 0 12px;
+    }
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: #4d5f79;
+      font-weight: 700;
+    }
+    .status-controls {
+      border: 1px dashed #d6e1ef;
+      border-radius: 10px;
+      background: #f8fbff;
+      padding: 10px;
+      margin-top: 10px;
+    }
+    .status-controls h4 {
+      margin: 0 0 6px;
+      font-size: 13px;
+    }
+    .status-controls .meta {
+      margin-bottom: 8px;
+    }
+
+    .assign-panel { border-top: 1px solid #dde6f1; padding-top: 14px; }
+    .queue-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+    .small-btn {
+      border: 1px solid #d7e0ec;
+      background: #fff;
+      color: #273446;
+      border-radius: 8px;
+      padding: 6px 8px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .small-btn.primary { background: #8c1d2d; color: #fff; border-color: #8c1d2d; }
+    .small-btn.warn { background: #f2f6fb; color: #44556e; }
+    .small-btn:disabled { opacity: .6; cursor: not-allowed; }
+    .small-btn.outline { background: #fff; border-color: #ccd6e5; color: #3a4a61; }
+    .btn-primary.loading {
+      position: relative;
+      opacity: .85;
+      pointer-events: none;
+      padding-left: 34px;
+    }
+    .btn-primary.loading::before {
+      content: '';
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      width: 14px;
+      height: 14px;
+      margin-top: -7px;
+      border: 2px solid rgba(255, 255, 255, .45);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .footer-clean {
+      margin-top: 12px;
+      text-align: center;
+      color: #6b7c92;
+      font-size: 11px;
+      letter-spacing: .02em;
+      padding: 10px 4px 4px;
+      border-top: 1px solid #dde6f1;
+    }
+    .empty-box {
+      border: 1px dashed #d4deec;
+      border-radius: 10px;
+      padding: 14px;
+      background: #f9fbff;
+      color: #566b86;
+      font-size: 13px;
+    }
+    .loading-inline {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #5a6d86;
+      font-size: 13px;
+    }
+    .loading-inline::before {
+      content: '';
+      width: 14px;
+      height: 14px;
+      border: 2px solid #cfd9e8;
+      border-top-color: #8c1d2d;
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+    .queue-table tbody tr:nth-child(even) {
+      background: #fcfdff;
+    }
+    .queue-table tbody tr:hover {
+      background: #f5f9ff;
+    }
+    .queue-scroll {
+      max-height: 320px;
+      overflow-y: auto;
+      overflow-x: auto;
+      border: 1px solid #e1e8f2;
+      border-radius: 10px;
+    }
+    .queue-table thead th {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      background: #f7faff;
+      box-shadow: inset 0 -1px 0 #d9e1ec;
+    }
+    .queue-request {
+      font-weight: 800;
+      color: #1f2d3f;
+    }
+    .queue-dates {
+      white-space: nowrap;
+      color: #4f6078;
+    }
+    .queue-terminal {
+      color: #2b3a4d;
+      font-weight: 700;
+    }
+
+    @media (max-width: 980px) {
+      .tech-layout { grid-template-columns: 1fr; }
+      .summary-row { grid-template-columns: 1fr; gap: 2px; }
+      .summary-key { font-size: 12px; }
+      .terminal-meta-row { grid-template-columns: 1fr; gap: 1px; }
+      .queue-actions { gap: 5px; }
+      .footer-clean { margin-top: 10px; padding-top: 10px; }
+      .queue-scroll { max-height: 260px; }
+    }
+  </style>
+</head>
+<body>
+  <script>const BOOT = <?!= JSON.stringify(boot) ?>;</script>
+  <div class="page">
+    <div class="topbar">
+      <div class="brand"><span class="badge-dot"></span> IT Terminal Assignment</div>
+    </div>
+
+    <div id="notice" class="notice hidden"></div>
+
+    <div class="tech-layout">
+      <div>
+        <div class="card">
+          <div class="panel-kicker">Request Context</div>
+          <h3 style="margin-top:0;">Request Summary</h3>
+          <div id="requestSummary" class="meta">Select a request from queue.</div>
+        </div>
+        <div class="card">
+          <div class="panel-kicker">Progress</div>
+          <h3>Workflow Status</h3>
+          <div id="workflowStatus" class="meta">No request selected.</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="card">
+          <h3>Select Terminal for Assignment</h3>
+          <p class="meta" style="margin-top:-6px;">Choose available terminal and assign to selected request.</p>
+          <div class="status-legend">
+            <span class="legend-item"><span class="status-tag available">Available</span>Ready for assignment</span>
+            <span class="legend-item"><span class="status-tag in-use">In Use</span>Currently allocated</span>
+            <span class="legend-item"><span class="status-tag maintenance">Under maintenance</span>Not assignable</span>
+          </div>
+
+          <div id="terminalCards" class="terminal-grid"></div>
+
+          <div class="assign-panel">
+            <div class="grid two">
+              <div>
+                <label>Request ID</label>
+                <input id="assignRequestId" readonly>
+              </div>
+              <div>
+                <label>Terminal</label>
+                <select id="assignTerminalId"></select>
+              </div>
+            </div>
+
+            <div class="grid two" style="margin-top:10px;">
+              <div>
+                <label>Collection Date/Time</label>
+                <input id="assignCollection" type="datetime-local">
+              </div>
+              <div>
+                <label>Assignment Note</label>
+                <input id="assignRemarks" placeholder="Optional assignment note">
+              </div>
+            </div>
+
+            <div class="actions" style="margin-top:12px;">
+              <button id="assignBtn" class="btn-primary">Assign Terminal &amp; Notify Finance</button>
+              <button id="clearAssignBtn" class="btn-neutral">Clear</button>
+            </div>
+          </div>
+
+          <div class="status-controls">
+            <h4>Terminal Status Update</h4>
+            <p class="meta">Select a terminal card, choose status, then apply.</p>
+            <div class="grid two">
+              <div>
+                <label>Selected Terminal</label>
+                <input id="statusTerminalId" readonly placeholder="Select terminal from cards">
+              </div>
+              <div>
+                <label>Status</label>
+                <select id="statusSelect">
+                  <option value="Available">Available</option>
+                  <option value="In Use">In Use</option>
+                  <option value="Under maintenance">Under maintenance</option>
+                </select>
+              </div>
+            </div>
+            <div class="actions" style="margin-top:10px;">
+              <button id="statusUpdateBtn" class="btn-neutral">Update Terminal Status</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Pending Assignment Queue</h3>
+      <div class="queue-scroll">
+        <table class="queue-table">
+          <thead>
+            <tr>
+              <th>Request ID</th>
+              <th>Status</th>
+              <th>Requester</th>
+              <th>Date Range</th>
+              <th>Terminal</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="queueRows"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Active / Overdue Items</h3>
+      <div class="grid two">
+        <div>
+          <h4 style="margin:0 0 10px;">Active Items</h4>
+          <div style="overflow:auto;">
+            <table>
+              <thead>
+                <tr>
+                  <th>Request ID</th>
+                  <th>Status</th>
+                  <th>Requester</th>
+                  <th>Dates</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="activeRows"></tbody>
+            </table>
+          </div>
+        </div>
+        <div>
+          <h4 style="margin:0 0 10px;">Overdue</h4>
+          <div id="overdue" class="meta"></div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="footer-clean">&copy; 2026 NETS Terminal Loan Workflow</footer>
+  </div>
+
+  <?!= include('Scripts'); ?>
+  <script>
+    const $ = id => document.getElementById(id);
+    const state = {
+      queue: [],
+      pendingQueue: [],
+      activeItems: [],
+      overdue: [],
+      terminals: [],
+      selectedRequestId: '',
+      selectedTerminalId: '',
+      loadingDashboard: false
+    };
+
+    function ensureApiResult(res, fallback) {
+      if (!res || typeof res !== 'object') {
+        throw new Error((fallback || 'Request failed.') + ' (empty server response)');
+      }
+      if (!Object.prototype.hasOwnProperty.call(res, 'ok')) {
+        throw new Error((fallback || 'Request failed.') + ' (malformed server response)');
+      }
+      if (!res.ok) {
+        throw new Error(res.error || fallback || 'Request failed.');
+      }
+      return res;
+    }
+
+    function friendlyErrorMessage(err, fallback) {
+      const raw = String((err && err.message) || fallback || 'Request failed.');
+      const msg = raw.toLowerCase();
+      if (msg.includes('internal access only')) return 'Access restricted: please use your approved work account.';
+      if (msg.includes('tech access required')) return 'You do not have IT Dashboard access yet. Ask admin to grant TECH/ADMIN role.';
+      if (msg.includes('selected terminal is not available')) return 'Selected terminal is unavailable for this request. Choose an available terminal.';
+      if (msg.includes('selected terminal not found')) return 'Terminal record not found. Refresh and try again.';
+      if (msg.includes('request not found')) return 'Request no longer exists or was updated. Refresh the queue.';
+      if (msg.includes('malformed server response') || msg.includes('empty response') || msg.includes('empty server response')) {
+        return 'Server response was incomplete. Please refresh and retry.';
+      }
+      return raw;
+    }
+
+    function showError(context, err) {
+      const detail = friendlyErrorMessage(err, context || 'Action failed.');
+      const prefix = context ? `${context} ` : '';
+      const text = `${prefix}${detail}`.trim();
+      NLFClient.setNotice($('notice'), 'bad', text);
+    }
+
+    function dashboardLoadHint(err) {
+      const msg = String((err && err.message) || '').toLowerCase();
+      if (msg.includes('tech access') || msg.includes('internal access')) {
+        return 'Please sign in with your approved work account and confirm TECH/ADMIN access.';
+      }
+      if (msg.includes('response') || msg.includes('malformed') || msg.includes('empty')) {
+        return 'The dashboard service returned incomplete data. Refresh once; if it persists, rerun setup and redeploy.';
+      }
+      return 'Check Terminals sheet setup and try again.';
+    }
+
+    function statusTagClass(status) {
+      const text = String(status || '').toLowerCase();
+      if (text === 'available') return 'status-tag available';
+      if (text === 'under maintenance') return 'status-tag maintenance';
+      return 'status-tag in-use';
+    }
+
+    function findRequestById(requestId) {
+      const all = state.queue || [];
+      return all.find(x => x.requestId === requestId) || null;
+    }
+
+    function findTerminalById(terminalId) {
+      return (state.terminals || []).find(t => t.terminalId === terminalId || t.terminalNumber === terminalId) || null;
+    }
+
+    function setSelectedRequest(requestId) {
+      state.selectedRequestId = requestId || '';
+      $('assignRequestId').value = state.selectedRequestId;
+      $('requestSummary').innerHTML = '<div class="loading-inline">Loading request summary...</div>';
+      $('workflowStatus').innerHTML = '<span class="loading-inline">Loading workflow status...</span>';
+      window.setTimeout(() => {
+        renderRequestSummary();
+        renderWorkflow();
+        renderQueue();
+      }, 0);
+    }
+
+    function setSelectedTerminal(terminalId) {
+      state.selectedTerminalId = terminalId || '';
+      $('assignTerminalId').value = terminalId || '';
+      $('statusTerminalId').value = terminalId || '';
+      const selected = findTerminalById(terminalId || '');
+      if (selected && selected.status) {
+        $('statusSelect').value = selected.status;
+      }
+      renderTerminalCards();
+    }
+
+    async function loadDashboard() {
+      NLFClient.setNotice($('notice'), '', '');
+      state.loadingDashboard = true;
+      $('terminalCards').innerHTML = '<div class="empty-box"><span class="loading-inline">Loading terminal inventory...</span></div>';
+      $('queueRows').innerHTML = '<tr><td colspan="6"><span class="loading-inline">Loading pending queue...</span></td></tr>';
+      $('requestSummary').innerHTML = '<div class="loading-inline">Loading request summary...</div>';
+      $('workflowStatus').innerHTML = '<span class="loading-inline">Loading workflow status...</span>';
+      $('activeRows').innerHTML = '<tr><td colspan="5"><span class="loading-inline">Loading active items...</span></td></tr>';
+      $('overdue').innerHTML = '<span class="loading-inline">Loading overdue items...</span>';
+      try {
+        const raw = await NLFClient.run('apiGetTechDashboardData', {
+          actorEmail: BOOT.userEmail || ''
+        });
+        const res = ensureApiResult(raw, 'Unable to load IT dashboard.');
+
+        state.queue = res.queue || [];
+        state.pendingQueue = res.pendingQueue || [];
+        state.activeItems = res.activeItems || [];
+        state.overdue = res.overdue || [];
+        state.terminals = res.terminals || [];
+
+        if (!state.selectedRequestId || !findRequestById(state.selectedRequestId)) {
+          state.selectedRequestId = (state.pendingQueue[0] && state.pendingQueue[0].requestId) || '';
+          $('assignRequestId').value = state.selectedRequestId;
+        }
+
+        state.loadingDashboard = false;
+        renderTerminalOptions();
+        renderTerminalCards();
+        renderQueue();
+        renderRequestSummary();
+        renderWorkflow();
+        renderOverdue();
+      } catch (err) {
+        showError('Unable to load IT dashboard. ' + dashboardLoadHint(err), err);
+      } finally {
+        state.loadingDashboard = false;
+      }
+    }
+
+    function renderTerminalOptions() {
+      const availableTerminals = (state.terminals || [])
+        .filter(t => String(t.status || '').toLowerCase() === 'available');
+      const options = availableTerminals
+        .map(t => `<option value="${NLFClient.safe(t.terminalId || t.terminalNumber)}">${NLFClient.safe(t.terminalNumber || t.terminalId)} (${NLFClient.safe(t.status)})</option>`)
+        .join('');
+      $('assignTerminalId').innerHTML = options || '<option value="">No available terminal</option>';
+
+      const selected = findTerminalById(state.selectedTerminalId || '');
+      if (!selected && options) {
+        state.selectedTerminalId = $('assignTerminalId').value || '';
+      }
+
+      const selectedNow = findTerminalById(state.selectedTerminalId || '');
+      if (options) {
+        const selectedAvailable = selectedNow && String(selectedNow.status || '').toLowerCase() === 'available';
+        if (selectedAvailable) {
+          $('assignTerminalId').value = selectedNow.terminalId || selectedNow.terminalNumber;
+        } else if (!$('assignTerminalId').value) {
+          $('assignTerminalId').value = availableTerminals[0] ? (availableTerminals[0].terminalId || availableTerminals[0].terminalNumber) : '';
+        }
+      }
+
+      $('statusTerminalId').value = state.selectedTerminalId || '';
+      if (selectedNow && selectedNow.status) $('statusSelect').value = selectedNow.status;
+    }
+
+    function renderTerminalCards() {
+      const items = state.terminals || [];
+      if (!items.length) {
+        $('terminalCards').innerHTML = '<div class="empty-box">No terminals found. Check Terminals sheet setup and refresh.</div>';
+        return;
+      }
+
+      $('terminalCards').innerHTML = items.map((t) => {
+        const id = t.terminalId || t.terminalNumber;
+        const number = t.terminalNumber || id;
+        const isSelected = state.selectedTerminalId === id;
+        const status = String(t.status || 'Available');
+        const maintenance = status.toLowerCase() === 'under maintenance';
+        const unavailable = status.toLowerCase() !== 'available';
+
+        const statusAction = maintenance
+          ? `<button class="small-btn outline" onclick="event.stopPropagation(); setTerminalStatus('${NLFClient.safe(id)}','Available')">Set Available</button>`
+          : `<button class="small-btn warn" onclick="event.stopPropagation(); setTerminalStatus('${NLFClient.safe(id)}','Under maintenance')">Set Maintenance</button>`;
+
+        return `
+          <div class="terminal-card ${isSelected ? 'selected' : ''} ${unavailable ? 'unavailable' : ''}" onclick="selectTerminal('${NLFClient.safe(id)}')">
+            <div class="terminal-head">
+              <div class="terminal-ident">
+                <span class="terminal-icon">T</span>
+                <p class="terminal-title">${NLFClient.safe(number)}</p>
+              </div>
+              <span class="${statusTagClass(status)}">${NLFClient.safe(status)}</span>
+            </div>
+            <div class="terminal-meta-grid">
+              <div class="terminal-meta-row"><span class="terminal-meta-key">Terminal ID</span><span class="terminal-meta-val">${NLFClient.safe(t.terminalId || '-')}</span></div>
+              <div class="terminal-meta-row"><span class="terminal-meta-key">Serial</span><span class="terminal-meta-val">${NLFClient.safe(t.serialNumber || '-')}</span></div>
+              <div class="terminal-meta-row"><span class="terminal-meta-key">Location</span><span class="terminal-meta-val">${NLFClient.safe(t.location || '-')}</span></div>
+              <div class="terminal-meta-row"><span class="terminal-meta-key">Last Used By</span><span class="terminal-meta-val">${NLFClient.safe(t.lastUsedBy || '-')}</span></div>
+            </div>
+            <div class="queue-actions">
+              ${statusAction}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderQueue() {
+      if (state.loadingDashboard) {
+        $('queueRows').innerHTML = '<tr><td colspan="6"><span class="loading-inline">Loading pending queue...</span></td></tr>';
+        return;
+      }
+      const rows = (state.pendingQueue || []).map(item => {
+        const isSelected = item.requestId === state.selectedRequestId;
+        const actions = [
+          `<button class="small-btn ${isSelected ? 'primary' : ''}" onclick="selectRequest('${NLFClient.safe(item.requestId)}')">${isSelected ? 'Selected' : 'Select'}</button>`
+        ];
+
+        if (item.status === 'Ready for Collection' || item.status === 'Assigned') {
+          actions.push(`<button class="small-btn" onclick="markCollected('${NLFClient.safe(item.requestId)}')">Mark Collected</button>`);
+        }
+        if ((item.status === 'On Loan' || item.status === 'Ready for Collection' || item.status === 'Assigned' || item.status === 'Finance Notified' || !!item.financeNotified) && !!item.assignedTerminalId) {
+          actions.push(`<button class="small-btn" onclick="markReturned('${NLFClient.safe(item.requestId)}')">Complete Request</button>`);
+        }
+
+        return `
+          <tr>
+            <td><span class="queue-request">${NLFClient.safe(item.requestId)}</span></td>
+            <td><span class="${NLFClient.statusClass(item.status)}">${NLFClient.safe(item.status)}</span></td>
+            <td>${NLFClient.safe(item.requesterName || '-')}<br><span class="meta">${NLFClient.safe(item.requesterEmail || '')}</span></td>
+            <td><span class="queue-dates">${NLFClient.safe(item.needDate || '-')} → ${NLFClient.safe(item.returnDate || '-')}</span></td>
+            <td><span class="queue-terminal">${NLFClient.safe(item.assignedTerminalId || '-')}</span></td>
+            <td><div class="queue-actions">${actions.join('')}</div></td>
+          </tr>
+        `;
+      }).join('');
+
+      $('queueRows').innerHTML = rows || '<tr><td colspan="6"><div class="empty-box"><strong>Queue is clear.</strong><br>No requests are waiting for IT assignment right now.</div></td></tr>';
+    }
+
+    function renderRequestSummary() {
+      const req = findRequestById(state.selectedRequestId);
+      if (!req) {
+        $('requestSummary').innerHTML = '<div class="empty-box">Select a request from the queue to view full details.</div>';
+        return;
+      }
+
+      const budgetValue = req.budgetCodes || [req.financeReference, req.costCentre].filter(Boolean).join(' | ') || '-';
+      $('requestSummary').innerHTML = `
+        <div class="summary-grid">
+          <div class="summary-row"><div class="summary-key">Current Status</div><div class="summary-value"><span class="${NLFClient.statusClass(req.status)}">${NLFClient.safe(req.status || '-')}</span></div></div>
+          <div class="summary-row"><div class="summary-key">Request ID</div><div class="summary-value">${NLFClient.safe(req.requestId)}</div></div>
+          <div class="summary-row"><div class="summary-key">Requester</div><div class="summary-value">${NLFClient.safe(req.requesterName || '-')}</div></div>
+          <div class="summary-row"><div class="summary-key">Email</div><div class="summary-value">${NLFClient.safe(req.requesterEmail || '-')}</div></div>
+          <div class="summary-row"><div class="summary-key">Division</div><div class="summary-value">${NLFClient.safe(req.department || '-')}</div></div>
+          <div class="summary-row"><div class="summary-key">Reason</div><div class="summary-value">${NLFClient.safe(req.purpose || '-')}</div></div>
+          <div class="summary-row"><div class="summary-key">Event</div><div class="summary-value">${NLFClient.safe(req.eventName || '-')}</div></div>
+          <div class="summary-row"><div class="summary-key">Location</div><div class="summary-value">${NLFClient.safe(req.location || '-')}</div></div>
+          <div class="summary-row"><div class="summary-key">Period</div><div class="summary-value">${NLFClient.safe(req.needDate || '-')} → ${NLFClient.safe(req.returnDate || '-')}</div></div>
+          <div class="summary-row"><div class="summary-key">Budget</div><div class="summary-value">${NLFClient.safe(budgetValue)}</div></div>
+        </div>
+      `;
+    }
+
+    function renderWorkflow() {
+      const req = findRequestById(state.selectedRequestId);
+      if (!req) {
+        $('workflowStatus').innerHTML = 'No request selected.';
+        return;
+      }
+
+      const s = String(req.status || '');
+      const completedStatuses = ['Completed', 'Returned', 'Closed'];
+      const isCompleted = completedStatuses.indexOf(s) >= 0;
+      const stepMap = {
+        submitted: ['Submitted', s === 'Submitted' ? 'active' : 'done'],
+        it: ['IT Assignment', ['Pending Tech Assignment', 'Assigned', 'Finance Notified', 'Ready for Collection', 'On Loan'].indexOf(s) >= 0 ? 'active' : (isCompleted ? 'done' : 'pending')],
+        finance: ['Finance Notified', isCompleted ? 'done' : ((req.financeNotified || s === 'Finance Notified') ? 'active' : 'pending')],
+        complete: ['Completed', isCompleted ? 'done' : 'pending']
+      };
+
+      $('workflowStatus').innerHTML = `<div class="workflow-list">${Object.keys(stepMap).map(key => {
+        const item = stepMap[key];
+        return `<div class="workflow-step ${item[1]}"><span class="workflow-dot"></span><div><strong>${item[0]}</strong><div class="meta">${item[1] === 'active' ? 'Active step' : (item[1] === 'done' ? 'Completed' : 'Pending')}</div></div></div>`;
+      }).join('')}</div>`;
+    }
+
+    function renderOverdue() {
+      renderActiveItems();
+
+      const rows = (state.overdue || []).map(item => {
+        return `<p><strong>${NLFClient.safe(item.requestId)}</strong> — ${NLFClient.safe(item.requesterName)} (return by ${NLFClient.safe(item.returnDate)})</p>`;
+      }).join('');
+
+      if (rows) {
+        $('overdue').innerHTML = rows;
+      } else {
+        $('overdue').innerHTML = '<div class="empty-box">No overdue items.</div>';
+      }
+    }
+
+    function renderActiveItems() {
+      const rows = (state.activeItems || []).map(item => {
+        const actions = [
+          `<button class="small-btn" onclick="selectRequest('${NLFClient.safe(item.requestId)}')">Open</button>`
+        ];
+
+        if (item.status === 'Ready for Collection' || item.status === 'Assigned') {
+          actions.push(`<button class="small-btn" onclick="markCollected('${NLFClient.safe(item.requestId)}')">Mark Collected</button>`);
+        }
+        if ((item.status === 'On Loan' || item.status === 'Ready for Collection' || item.status === 'Assigned' || item.status === 'Finance Notified' || !!item.financeNotified) && !!item.assignedTerminalId) {
+          actions.push(`<button class="small-btn" onclick="markReturned('${NLFClient.safe(item.requestId)}')">Complete Request</button>`);
+        }
+
+        return `
+          <tr>
+            <td><strong>${NLFClient.safe(item.requestId)}</strong></td>
+            <td><span class="${NLFClient.statusClass(item.status)}">${NLFClient.safe(item.status)}</span></td>
+            <td>${NLFClient.safe(item.requesterName || '-')}</td>
+            <td>${NLFClient.safe(item.needDate || '-')} to ${NLFClient.safe(item.returnDate || '-')}</td>
+            <td><div class="queue-actions">${actions.join('')}</div></td>
+          </tr>
+        `;
+      }).join('');
+
+      $('activeRows').innerHTML = rows || '<tr><td colspan="5"><div class="empty-box">No active loan items at the moment.</div></td></tr>';
+    }
+
+    function setAssignBusy(isBusy) {
+      const btn = $('assignBtn');
+      if (!btn) return;
+      btn.disabled = !!isBusy;
+      btn.classList.toggle('loading', !!isBusy);
+      btn.textContent = isBusy ? 'Assigning...' : 'Assign Terminal & Notify Finance';
+      if ($('clearAssignBtn')) $('clearAssignBtn').disabled = !!isBusy;
+      if ($('statusUpdateBtn')) $('statusUpdateBtn').disabled = !!isBusy;
+    }
+
+    async function assignTerminal() {
+      const requestId = $('assignRequestId').value;
+      const terminalId = $('assignTerminalId').value;
+      if (!requestId) {
+        NLFClient.setNotice($('notice'), 'bad', 'Select a request from queue first.');
+        return;
+      }
+      if (!terminalId) {
+        NLFClient.setNotice($('notice'), 'bad', 'Select an available terminal.');
+        return;
+      }
+
+      const selectedTerminal = findTerminalById(terminalId);
+      if (!selectedTerminal || String(selectedTerminal.status || '').toLowerCase() !== 'available') {
+        NLFClient.setNotice($('notice'), 'bad', 'Terminal is unavailable or under maintenance.');
+        return;
+      }
+
+      setAssignBusy(true);
+      try {
+        const raw = await NLFClient.run('apiAssignTerminal', {
+          actorEmail: BOOT.userEmail || '',
+          requestId,
+          terminalId,
+          collectionDateTime: $('assignCollection').value,
+          remarks: $('assignRemarks').value
+        });
+        const res = ensureApiResult(raw, 'Assignment failed.');
+        NLFClient.setNotice($('notice'), 'ok', res.message || 'Assigned.');
+        state.selectedTerminalId = terminalId || state.selectedTerminalId;
+        $('statusTerminalId').value = state.selectedTerminalId || '';
+        $('statusSelect').value = 'In Use';
+        clearAssign();
+        await loadDashboard();
+      } catch (err) {
+        showError('Assignment failed.', err);
+      } finally {
+        setAssignBusy(false);
+      }
+    }
+
+    async function markCollected(requestId) {
+      if (!confirm(`Mark ${requestId} as Collected / On Loan?`)) return;
+      try {
+        const raw = await NLFClient.run('apiMarkCollected', {
+          actorEmail: BOOT.userEmail || '',
+          requestId
+        });
+        ensureApiResult(raw, 'Unable to mark collected.');
+        NLFClient.setNotice($('notice'), 'ok', 'Updated to On Loan.');
+        await loadDashboard();
+      } catch (err) {
+        showError('Unable to mark collected.', err);
+      }
+    }
+
+    async function markReturned(requestId) {
+      if (!confirm(`Mark ${requestId} as returned and complete the request?`)) return;
+      try {
+        const raw = await NLFClient.run('apiMarkReturned', {
+          actorEmail: BOOT.userEmail || '',
+          requestId
+        });
+        const res = ensureApiResult(raw, 'Unable to complete request.');
+        NLFClient.setNotice($('notice'), 'ok', res.message || 'Request marked completed.');
+        await loadDashboard();
+      } catch (err) {
+        showError('Unable to complete request.', err);
+      }
+    }
+
+    async function setTerminalStatus(terminalId, status) {
+      try {
+        const raw = await NLFClient.run('apiUpdateTerminalStatus', {
+          actorEmail: BOOT.userEmail || '',
+          terminalId,
+          status,
+          notes: ''
+        });
+        ensureApiResult(raw, 'Unable to update terminal status.');
+        NLFClient.setNotice($('notice'), 'ok', `Terminal updated to ${status}.`);
+        await loadDashboard();
+      } catch (err) {
+        showError('Unable to update terminal status.', err);
+      }
+    }
+
+    async function updateSelectedTerminalStatus() {
+      const terminalId = $('statusTerminalId').value || state.selectedTerminalId;
+      const status = $('statusSelect').value;
+      if (!terminalId) {
+        NLFClient.setNotice($('notice'), 'bad', 'Select a terminal card first.');
+        return;
+      }
+      await setTerminalStatus(terminalId, status);
+    }
+
+    function clearAssign() {
+      $('assignRequestId').value = state.selectedRequestId || '';
+      $('assignRemarks').value = '';
+      $('assignCollection').value = '';
+      $('assignTerminalId').value = state.selectedTerminalId || '';
+      $('statusTerminalId').value = state.selectedTerminalId || '';
+    }
+
+    function selectRequest(requestId) {
+      setSelectedRequest(requestId);
+      clearAssign();
+    }
+
+    function selectTerminal(terminalId) {
+      setSelectedTerminal(terminalId);
+    }
+
+    window.markCollected = markCollected;
+    window.markReturned = markReturned;
+    window.selectRequest = selectRequest;
+    window.selectTerminal = selectTerminal;
+    window.setTerminalStatus = setTerminalStatus;
+
+    $('assignBtn').addEventListener('click', assignTerminal);
+    $('clearAssignBtn').addEventListener('click', clearAssign);
+    $('statusUpdateBtn').addEventListener('click', updateSelectedTerminalStatus);
+
+    loadDashboard();
+  </script>
+</body>
+</html>

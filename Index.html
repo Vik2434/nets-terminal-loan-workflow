@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <?!= include('Styles'); ?>
+  <style>
+    .request-shell { max-width: 980px; margin: 0 auto; }
+    .request-header { display:flex; align-items:center; gap:12px; margin-bottom:16px; }
+    .request-header h1 { margin:0; font-size:28px; font-weight:800; letter-spacing:-0.02em; }
+    .request-kicker { color:var(--muted); margin:0; font-weight:600; }
+    .section-card {
+      padding: 22px;
+      margin-bottom: 18px;
+      border: 1px solid #d7e0ec;
+      border-radius: 14px;
+      box-shadow: 0 12px 30px rgba(16, 32, 60, 0.06);
+      background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+    }
+    .section-title { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:16px; }
+    .section-title h3 { margin:0; font-size:21px; }
+    .required::after { content:' *'; color:var(--bad); }
+    .required-prominent {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .required-chip {
+      display: inline-block;
+      font-size: 10px;
+      line-height: 1;
+      padding: 4px 6px;
+      border-radius: 999px;
+      background: #feeceb;
+      color: #9f1f17;
+      border: 1px solid #fcc8c2;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .control-hint { font-size:12px; color:var(--muted); margin-top:6px; }
+    .device-pill { display:inline-flex; align-items:center; gap:8px; border:1px solid var(--line); background:#f8fafc; padding:10px 12px; border-radius:10px; font-weight:700; }
+    .segment { display:inline-flex; gap:6px; padding:4px; border:1px solid var(--line); border-radius:11px; background:#f8fafc; }
+    .time-segment {
+      background: #f4f7fb;
+      border-color: #d0dceb;
+      padding: 5px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.9);
+    }
+    .segment input { display:none; }
+    .segment label { margin:0; padding:8px 12px; border-radius:8px; cursor:pointer; font-size:14px; }
+    .segment input:checked + label { background:var(--brand); color:white; }
+    .time-segment label {
+      min-width: 96px;
+      text-align: center;
+      font-weight: 700;
+      color: #425268;
+    }
+    .time-segment input:checked + label {
+      background: linear-gradient(135deg, #8c1d2d 0%, #6f1724 100%);
+      color: white;
+      box-shadow: 0 6px 14px rgba(140, 29, 45, 0.25);
+    }
+    .request-footer {
+      text-align:center;
+      color:var(--muted);
+      font-size:12px;
+      margin:24px 0 8px;
+      padding-top: 14px;
+      border-top: 1px solid #dde6f1;
+    }
+    .submit-wrap { display:flex; align-items:center; gap:10px; }
+    .timing-grid {
+      display: grid;
+      gap: 12px;
+      margin-top: 12px;
+      padding: 14px;
+      border: 1px dashed #d5e0ee;
+      border-radius: 12px;
+      background: #f8fbff;
+    }
+    .timing-intro {
+      display: grid;
+      gap: 2px;
+    }
+    .timing-intro strong {
+      font-size: 14px;
+      color: #243446;
+    }
+    .timing-intro span {
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .timing-grid .segment {
+      width: fit-content;
+    }
+    .ack-box {
+      border: 1px solid #d8e2ef;
+      border-radius: 12px;
+      background: linear-gradient(180deg, #fffdfa 0%, #ffffff 100%);
+      padding: 16px 18px;
+    }
+    .ack-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .ack-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 88px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: #fff3f1;
+      color: #8c1d2d;
+      border: 1px solid #f6c9c3;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+    .ack-box .meta {
+      margin: 0;
+    }
+    .ack-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .ack-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 12px 13px;
+      border: 1px solid #e4eaf3;
+      border-radius: 11px;
+      background: #ffffff;
+      font-size: 14px;
+      color: var(--text);
+    }
+    .ack-item input {
+      width: 18px;
+      height: 18px;
+      margin-top: 1px;
+      flex: 0 0 auto;
+    }
+    .ack-item span {
+      line-height: 1.45;
+    }
+    .submit-btn {
+      min-width: 190px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: transform .08s ease, opacity .2s ease, box-shadow .2s ease;
+      box-shadow: 0 8px 18px rgba(140, 29, 45, 0.25);
+    }
+    .submit-btn:hover:not([disabled]) { transform: translateY(-1px); }
+    .submit-btn[disabled] {
+      opacity: 0.72;
+      cursor:not-allowed;
+      box-shadow: none;
+      filter: saturate(0.75);
+    }
+    .spinner {
+      width:16px;
+      height:16px;
+      border:2px solid rgba(255,255,255,0.32);
+      border-top-color:#fff;
+      border-radius:999px;
+      animation:spin 0.8s linear infinite;
+      display:none;
+    }
+    .submit-btn.loading .spinner { display:inline-block; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    @media (max-width: 900px) {
+      .section-card { padding: 18px; margin-bottom: 14px; }
+      .section-title h3 { font-size: 19px; }
+      .time-segment label { min-width: 88px; }
+    }
+    @media (max-width: 720px) {
+      .request-shell { padding: 14px; }
+      .request-header h1 { font-size: 24px; }
+      .section-title { flex-direction: column; align-items: flex-start; gap: 10px; }
+      .submit-wrap { width: 100%; }
+      .submit-btn { width: 100%; min-width: 0; }
+      .request-footer { margin-top: 18px; padding-top: 12px; }
+    }
+    .hide { display:none !important; }
+  </style>
+</head>
+<body>
+  <script>const BOOT = <?!= JSON.stringify(boot) ?>;</script>
+
+  <div class="page request-shell">
+    <div class="request-header">
+      <span class="badge-dot"></span>
+      <div>
+        <h1>NETS Terminal</h1>
+        <p class="request-kicker">Terminal Loan Request</p>
+      </div>
+    </div>
+
+    <div id="notice" class="notice hidden"></div>
+
+    <div class="card section-card">
+      <p class="meta" style="margin:0 0 6px;">Internal users only. Auto approval route switches to Pending Approval when both terminals are unavailable.</p>
+      <div class="meta" id="whoami"></div>
+    </div>
+
+    <form id="requestForm" novalidate>
+      <section class="card section-card">
+        <div class="section-title">
+          <h3>Requester Details</h3>
+        </div>
+        <div class="grid two">
+          <div>
+            <label for="requesterName" class="required">Requester Name</label>
+            <input id="requesterName" required placeholder="Enter your full name">
+            <div id="requesterNameHint" class="control-hint"></div>
+          </div>
+          <div>
+            <label for="requesterEmail" class="required">Requester Email</label>
+            <input id="requesterEmail" type="email" required readonly>
+          </div>
+        </div>
+        <div class="grid two" style="margin-top:10px;">
+          <div>
+            <label for="employeeId">Employee ID</label>
+            <input id="employeeId">
+          </div>
+          <div>
+            <label for="division" class="required">Division</label>
+            <select id="division" required>
+              <option value="">Select division</option>
+              <option>Admissions</option>
+              <option>Advancement</option>
+              <option>Booster</option>
+              <option>Communication</option>
+              <option>Elementary School</option>
+              <option>Facilities</option>
+              <option>Finance</option>
+              <option>High School</option>
+              <option>Human Resource</option>
+              <option>Information Technology</option>
+              <option>Middle School</option>
+              <option>OOL</option>
+              <option>PTA</option>
+            </select>
+          </div>
+        </div>
+      </section>
+
+      <section class="card section-card">
+        <div class="section-title">
+          <h3>Borrowing Details</h3>
+          <div class="segment" role="radiogroup" aria-label="Borrowing type">
+            <input type="radio" name="borrowType" id="borrowSelf" value="self" checked>
+            <label for="borrowSelf">For Myself</label>
+            <input type="radio" name="borrowType" id="borrowBehalf" value="behalf">
+            <label for="borrowBehalf">On Behalf Of</label>
+          </div>
+        </div>
+
+        <div>
+          <label>Device</label>
+          <div class="device-pill">NETS Terminal</div>
+        </div>
+
+        <div style="margin-top:12px;">
+          <label for="reason" class="required">Reason for this loan request</label>
+          <textarea id="reason" required></textarea>
+        </div>
+
+        <div id="borrowerFields" class="grid two hide" style="margin-top:12px;">
+          <div>
+            <label for="borrowerFirst" class="required">Borrower First Name</label>
+            <input id="borrowerFirst">
+          </div>
+          <div>
+            <label for="borrowerLast" class="required">Borrower Last Name</label>
+            <input id="borrowerLast">
+          </div>
+          <div>
+            <label for="borrowerEmail" class="required">Borrower Email</label>
+            <input id="borrowerEmail" type="email">
+          </div>
+          <div>
+            <label for="relationship" class="required">Relationship</label>
+            <input id="relationship" placeholder="e.g. Assistant, colleague">
+          </div>
+        </div>
+      </section>
+
+      <section class="card section-card">
+        <div class="section-title">
+          <h3>Budget Information</h3>
+        </div>
+        <div class="grid three">
+          <div>
+            <label for="glCode" class="required required-prominent">GL Code <span class="required-chip">Required</span></label>
+            <input id="glCode" required placeholder="e.g. 520010">
+          </div>
+          <div>
+            <label for="costCentre" class="required required-prominent">Cost Centre <span class="required-chip">Required</span></label>
+            <input id="costCentre" required placeholder="e.g. CC-400">
+          </div>
+          <div>
+            <label for="specialTrackingCode">Special Tracking Code</label>
+            <input id="specialTrackingCode" placeholder="Optional">
+          </div>
+        </div>
+      </section>
+
+      <section class="card section-card">
+        <div class="section-title">
+          <h3>Schedule and Location</h3>
+          <div class="segment time-segment" role="radiogroup" aria-label="Time option">
+            <input type="radio" name="timeOption" id="fullDay" value="Full Day" checked>
+            <label for="fullDay">Full Day</label>
+            <input type="radio" name="timeOption" id="halfDay" value="Half Day">
+            <label for="halfDay">Half Day</label>
+          </div>
+        </div>
+
+        <div class="grid two">
+          <div>
+            <label for="startDate" class="required">Start Date</label>
+            <input id="startDate" type="date" required>
+          </div>
+          <div>
+            <label for="endDate" class="required">End Date</label>
+            <input id="endDate" type="date" required>
+          </div>
+        </div>
+
+        <div class="grid two" style="margin-top:10px;">
+          <div>
+            <label for="eventName">Event Name</label>
+            <input id="eventName" placeholder="Event name">
+          </div>
+          <div>
+            <label for="deploymentLocation">Deployment Location</label>
+            <input id="deploymentLocation" placeholder="Enter location">
+          </div>
+        </div>
+
+        <div style="margin-top:10px;">
+          <label for="remarks">Remarks</label>
+          <textarea id="remarks"></textarea>
+        </div>
+
+        <div id="halfDayFields" class="timing-grid hide">
+          <div class="timing-intro">
+            <strong>Half-Day Timing</strong>
+            <span>Choose whether the device is needed in the morning or afternoon. A specific time is optional.</span>
+          </div>
+          <div>
+            <label class="required">Half Day Slot</label>
+            <div class="segment" role="radiogroup" aria-label="Half day slot">
+              <input type="radio" name="halfDaySlot" id="halfDayAm" value="AM">
+              <label for="halfDayAm">AM (Morning)</label>
+              <input type="radio" name="halfDaySlot" id="halfDayPm" value="PM">
+              <label for="halfDayPm">PM (Afternoon)</label>
+            </div>
+            <div class="control-hint">Required for finance report matching.</div>
+          </div>
+          <div>
+            <label for="specificTime">Specific Time</label>
+            <input id="specificTime" type="time">
+            <div class="control-hint">Optional. Add a more precise time only if the request is not simply AM or PM.</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card section-card">
+        <div class="section-title">
+          <h3>Acknowledgement</h3>
+        </div>
+        <div class="ack-box">
+          <div class="ack-header">
+            <p class="meta">Please confirm each statement before submitting this request.</p>
+            <span class="ack-badge">All 3 Required</span>
+          </div>
+          <div class="ack-list">
+            <label class="ack-item" for="ackPurpose">
+              <input id="ackPurpose" type="checkbox">
+              <span>The NETS machine is issued solely for its intended purpose only.</span>
+            </label>
+            <label class="ack-item" for="ackHandling">
+              <input id="ackHandling" type="checkbox">
+              <span>I am responsible for ensuring proper handling and safekeeping of the device.</span>
+            </label>
+            <label class="ack-item" for="ackUnauthorized">
+              <input id="ackUnauthorized" type="checkbox">
+              <span>Unauthorized transactions or personal use are strictly prohibited.</span>
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <section class="card section-card">
+        <div class="submit-wrap">
+          <button class="btn-primary submit-btn" type="submit" id="submitBtn">
+            <span class="spinner" aria-hidden="true"></span>
+            <span id="submitText">Submit Request</span>
+          </button>
+        </div>
+      </section>
+    </form>
+
+    <div id="result" class="card section-card hidden"></div>
+
+    <footer class="request-footer">&copy; 2026 NETS Terminal Loan Workflow</footer>
+  </div>
+
+  <?!= include('Scripts'); ?>
+  <script>
+    const $ = id => document.getElementById(id);
+
+    function updateBorrowerVisibility() {
+      const onBehalf = $('borrowBehalf').checked;
+      $('borrowerFields').classList.toggle('hide', !onBehalf);
+
+      ['borrowerFirst', 'borrowerLast', 'borrowerEmail', 'relationship'].forEach(id => {
+        $(id).required = onBehalf;
+      });
+    }
+
+    function selectedTimeOption() {
+      const selected = document.querySelector('input[name="timeOption"]:checked');
+      return selected ? selected.value : 'Full Day';
+    }
+
+    function selectedHalfDaySlot() {
+      const selected = document.querySelector('input[name="halfDaySlot"]:checked');
+      return selected ? selected.value : '';
+    }
+
+    function updateHalfDayVisibility() {
+      const isHalfDay = selectedTimeOption() === 'Half Day';
+      $('halfDayFields').classList.toggle('hide', !isHalfDay);
+      if (!isHalfDay) {
+        document.querySelectorAll('input[name="halfDaySlot"]').forEach(el => {
+          el.checked = false;
+        });
+        $('specificTime').value = '';
+      }
+    }
+
+    function acknowledgementsAccepted() {
+      return $('ackPurpose').checked && $('ackHandling').checked && $('ackUnauthorized').checked;
+    }
+
+    function requesterNamePrefill() {
+      return String((NLFClient.boot && NLFClient.boot.userName) || '').trim();
+    }
+
+    function setRequesterNameHint() {
+      const source = String((NLFClient.boot && NLFClient.boot.userNameSource) || 'none');
+      let message = 'Enter your full name exactly as it should appear on the request.';
+      if (source === 'roles') {
+        message = 'Loaded from your access role record. Update it here if needed.';
+      } else if (source === 'history') {
+        message = 'Loaded from a previous request. Update it here if needed.';
+      }
+      $('requesterNameHint').textContent = message;
+    }
+
+    function focusField(id) {
+      const el = $(id);
+      if (!el) return;
+      if (typeof el.focus === 'function') el.focus();
+    }
+
+    function validateBeforeSubmit() {
+      const onBehalf = $('borrowBehalf').checked;
+      const isHalfDay = selectedTimeOption() === 'Half Day';
+      const errors = [];
+
+      if (!$('requesterName').value.trim()) errors.push({ message: 'Enter your full name so the request can be recorded correctly.', focusId: 'requesterName' });
+      if (!$('requesterEmail').value.trim()) errors.push({ message: 'Your signed-in email could not be loaded. Refresh the page and try again.', focusId: 'requesterEmail' });
+      if (!$('division').value.trim()) errors.push({ message: 'Select the division requesting the NETS terminal.', focusId: 'division' });
+      if (!$('reason').value.trim()) errors.push({ message: 'Add a short reason so IT and Finance can understand the request.', focusId: 'reason' });
+      if (!$('glCode').value.trim()) errors.push({ message: 'Enter the GL code for this request.', focusId: 'glCode' });
+      if (!$('costCentre').value.trim()) errors.push({ message: 'Enter the cost centre for this request.', focusId: 'costCentre' });
+      if (!$('startDate').value) errors.push({ message: 'Choose the start date for when the NETS terminal is needed.', focusId: 'startDate' });
+      if (!$('endDate').value) errors.push({ message: 'Choose the end date for when the NETS terminal will be returned.', focusId: 'endDate' });
+      if (isHalfDay && !selectedHalfDaySlot()) errors.push({ message: 'Choose whether this half-day request is for AM or PM.', focusId: 'halfDayAm' });
+      if (!acknowledgementsAccepted()) errors.push({ message: 'Please confirm all three acknowledgement statements before submitting.', focusId: 'ackPurpose' });
+
+      if (onBehalf) {
+        if (!$('borrowerFirst').value.trim()) errors.push({ message: 'Enter the borrower’s first name.', focusId: 'borrowerFirst' });
+        if (!$('borrowerLast').value.trim()) errors.push({ message: 'Enter the borrower’s last name.', focusId: 'borrowerLast' });
+        if (!$('borrowerEmail').value.trim()) errors.push({ message: 'Enter the borrower’s work email address.', focusId: 'borrowerEmail' });
+        if (!$('relationship').value.trim()) errors.push({ message: 'Describe your relationship to the borrower.', focusId: 'relationship' });
+      }
+
+      if ($('startDate').value && $('endDate').value && $('startDate').value > $('endDate').value) {
+        errors.push({ message: 'The end date must be the same as or later than the start date.', focusId: 'endDate' });
+      }
+
+      return errors;
+    }
+
+    function setSubmitting(isSubmitting) {
+      const btn = $('submitBtn');
+      btn.disabled = isSubmitting;
+      btn.setAttribute('aria-busy', isSubmitting ? 'true' : 'false');
+      btn.classList.toggle('loading', isSubmitting);
+      $('submitText').textContent = isSubmitting ? 'Submitting...' : 'Submit Request';
+    }
+
+    function initPage() {
+      const signedEmail = NLFClient.boot.userEmail || '';
+      $('whoami').textContent = `Signed in as: ${signedEmail || 'Unknown user'}`;
+      $('requesterEmail').value = signedEmail;
+
+      const knownName = requesterNamePrefill();
+      if (!$('requesterName').value && knownName) {
+        $('requesterName').value = knownName;
+      }
+      setRequesterNameHint();
+
+      const today = new Date().toISOString().slice(0, 10);
+      $('startDate').value = today;
+      $('endDate').value = today;
+
+      $('borrowSelf').addEventListener('change', updateBorrowerVisibility);
+      $('borrowBehalf').addEventListener('change', updateBorrowerVisibility);
+      $('fullDay').addEventListener('change', updateHalfDayVisibility);
+      $('halfDay').addEventListener('change', updateHalfDayVisibility);
+      updateBorrowerVisibility();
+      updateHalfDayVisibility();
+
+      $('requestForm').addEventListener('submit', onSubmit);
+    }
+
+    async function onSubmit(event) {
+      event.preventDefault();
+      NLFClient.setNotice($('notice'), '', '');
+
+      const errors = validateBeforeSubmit();
+      if (errors.length) {
+        NLFClient.setNotice($('notice'), 'bad', errors[0].message);
+        focusField(errors[0].focusId);
+        return;
+      }
+
+      setSubmitting(true);
+
+      const onBehalf = $('borrowBehalf').checked;
+      const payload = {
+        requesterName: $('requesterName').value.trim(),
+        requesterEmail: $('requesterEmail').value.trim(),
+        employeeId: $('employeeId').value.trim(),
+        division: $('division').value.trim(),
+        department: $('division').value.trim(),
+        onBehalf: onBehalf,
+        borrowerFirst: $('borrowerFirst').value.trim(),
+        borrowerLast: $('borrowerLast').value.trim(),
+        borrowerEmail: $('borrowerEmail').value.trim(),
+        relationship: $('relationship').value.trim(),
+        deviceType: 'NETS Terminal',
+        reason: $('reason').value.trim(),
+        purpose: $('reason').value.trim(),
+        glCode: $('glCode').value.trim(),
+        financeReference: $('glCode').value.trim(),
+        costCentre: $('costCentre').value.trim(),
+        specialTrackingCode: $('specialTrackingCode').value.trim(),
+        needDate: $('startDate').value,
+        returnDate: $('endDate').value,
+        startDate: $('startDate').value,
+        endDate: $('endDate').value,
+        timeOption: selectedTimeOption(),
+        halfDaySlot: selectedHalfDaySlot(),
+        specificTime: $('specificTime').value,
+        eventName: $('eventName').value.trim(),
+        deploymentLocation: $('deploymentLocation').value.trim(),
+        location: $('deploymentLocation').value.trim(),
+        remarks: $('remarks').value.trim(),
+        acknowledgementsAccepted: acknowledgementsAccepted()
+      };
+
+      let submitted = false;
+      try {
+        const res = await NLFClient.run('apiSubmitRequest', payload);
+        if (!res.ok) throw new Error(res.error || 'Submission failed');
+        submitted = true;
+
+        NLFClient.setNotice($('notice'), 'ok', res.message || 'Request submitted successfully.');
+
+        $('result').classList.remove('hidden');
+        $('result').innerHTML = `
+          <h3 style="margin-bottom:10px;">Request Submitted Successfully</h3>
+          <p><strong>Request ID:</strong> ${NLFClient.safe(res.requestId)}</p>
+          <p><strong>Status:</strong> <span class="${NLFClient.statusClass(res.status)}">${NLFClient.safe(res.status)}</span></p>
+          <p class="meta" style="margin-top:10px;">A tracking link has been sent to your email.</p>
+        `;
+
+        $('requestForm').reset();
+        $('requesterEmail').value = NLFClient.boot.userEmail || '';
+        $('requesterName').value = payload.requesterName || requesterNamePrefill();
+        $('division').value = '';
+        $('startDate').value = new Date().toISOString().slice(0, 10);
+        $('endDate').value = $('startDate').value;
+        $('borrowSelf').checked = true;
+        $('fullDay').checked = true;
+        updateBorrowerVisibility();
+        updateHalfDayVisibility();
+      } catch (err) {
+        NLFClient.setNotice($('notice'), 'bad', err.message);
+      } finally {
+        if (submitted) {
+          $('submitText').textContent = 'Submitted';
+          $('submitBtn').disabled = true;
+          $('submitBtn').setAttribute('aria-busy', 'false');
+          $('submitBtn').classList.remove('loading');
+        } else {
+          setSubmitting(false);
+        }
+      }
+    }
+
+    initPage();
+  </script>
+</body>
+</html>

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <?!= include('Styles'); ?>
+</head>
+<body>
+  <script>const BOOT = <?!= JSON.stringify(boot) ?>;</script>
+  <div class="page">
+    <div class="topbar">
+      <div class="brand"><span class="badge-dot"></span> Approval Dashboard</div>
+    </div>
+
+    <div id="notice" class="notice hidden"></div>
+
+    <div class="card">
+      <h2>Pending Approval Queue</h2>
+      <p class="meta">Approver is controlled by `APPROVER_MODE` in Config. Current fallback: <strong><?!= boot.approverEmail ?></strong></p>
+    </div>
+
+    <div id="cards"></div>
+  </div>
+
+  <?!= include('Scripts'); ?>
+  <script>
+    const $ = id => document.getElementById(id);
+
+    async function loadApprovalQueue() {
+      NLFClient.setNotice($('notice'), '', '');
+      try {
+        const res = await NLFClient.run('apiGetApprovalDashboardData');
+        if (!res.ok) throw new Error(res.error || 'Cannot load queue');
+        renderCards(res.pending || []);
+      } catch (err) {
+        NLFClient.setNotice($('notice'), 'bad', err.message);
+      }
+    }
+
+    function renderCards(items) {
+      const wrap = $('cards');
+      if (!items.length) {
+        wrap.innerHTML = '<div class="card"><p class="meta">No requests waiting for approval.</p></div>';
+        return;
+      }
+
+      wrap.innerHTML = items.map(item => `
+        <div class="card">
+          <h3>${NLFClient.safe(item.requestId)} <span class="${NLFClient.statusClass(item.status)}">${NLFClient.safe(item.status)}</span></h3>
+          <div class="grid two">
+            <div>
+              <p><strong>Requester:</strong> ${NLFClient.safe(item.requesterName)} (${NLFClient.safe(item.requesterEmail)})</p>
+              <p><strong>Department:</strong> ${NLFClient.safe(item.department || '-')}</p>
+              <p><strong>Date Range:</strong> ${NLFClient.safe(item.needDate)} to ${NLFClient.safe(item.returnDate)}</p>
+            </div>
+            <div>
+              <p><strong>Purpose:</strong> ${NLFClient.safe(item.purpose || '-')}</p>
+              <p><strong>Cost Centre:</strong> ${NLFClient.safe(item.costCentre || '-')}</p>
+              <p><strong>Remarks:</strong> ${NLFClient.safe(item.remarks || '-')}</p>
+            </div>
+          </div>
+          <label style="margin-top:10px;">Approver Note</label>
+          <textarea id="note-${NLFClient.safe(item.requestId)}" placeholder="Optional note"></textarea>
+          <div class="actions" style="margin-top:10px;">
+            <button class="btn-ok" onclick="approveReq('${NLFClient.safe(item.requestId)}')">Approve to Waitlist</button>
+            <button class="btn-bad" onclick="rejectReq('${NLFClient.safe(item.requestId)}')">Reject</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function approveReq(requestId) {
+      const note = (document.getElementById(`note-${requestId}`) || {}).value || '';
+      const res = await NLFClient.run('apiApproveRequest', { requestId, note });
+      if (!res.ok) {
+        NLFClient.setNotice($('notice'), 'bad', res.error || 'Approve failed.');
+        return;
+      }
+      NLFClient.setNotice($('notice'), 'ok', res.message || 'Approved.');
+      await loadApprovalQueue();
+    }
+
+    async function rejectReq(requestId) {
+      const note = (document.getElementById(`note-${requestId}`) || {}).value || '';
+      if (!confirm(`Reject ${requestId}?`)) return;
+      const res = await NLFClient.run('apiRejectRequest', { requestId, note });
+      if (!res.ok) {
+        NLFClient.setNotice($('notice'), 'bad', res.error || 'Reject failed.');
+        return;
+      }
+      NLFClient.setNotice($('notice'), 'ok', res.message || 'Rejected.');
+      await loadApprovalQueue();
+    }
+
+    window.approveReq = approveReq;
+    window.rejectReq = rejectReq;
+    loadApprovalQueue();
+  </script>
+</body>
+</html>

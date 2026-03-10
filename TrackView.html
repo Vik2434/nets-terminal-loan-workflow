@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <?!= include('Styles'); ?>
+  <style>
+    .trackview-shell { max-width: 1160px; }
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .summary-item {
+      border: 1px solid #dde6f2;
+      border-radius: 10px;
+      padding: 10px 12px;
+      background: #f8fbff;
+    }
+    .summary-item .meta {
+      margin: 0 0 4px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    .summary-item strong { font-size: 14px; }
+
+    .lifecycle-wrap {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .life-step {
+      border: 1px solid #dbe5f2;
+      border-radius: 10px;
+      padding: 10px;
+      background: #fff;
+      min-height: 86px;
+    }
+    .life-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 999px;
+      border: 2px solid #c6d3e6;
+      margin-bottom: 8px;
+    }
+    .life-step.done .life-dot {
+      background: #1f8f5f;
+      border-color: #1f8f5f;
+    }
+    .life-step.active {
+      border-color: #8c1d2d;
+      box-shadow: 0 0 0 2px rgba(140, 29, 45, 0.16);
+      background: #fff8f8;
+    }
+    .life-step.active .life-dot {
+      background: #8c1d2d;
+      border-color: #8c1d2d;
+    }
+    .life-step h4 {
+      margin: 0 0 4px;
+      font-size: 13px;
+    }
+    .life-step p {
+      margin: 0;
+      color: #607086;
+      font-size: 12px;
+    }
+
+    .details-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .kv-grid {
+      display: grid;
+      gap: 8px;
+    }
+    .kv-row {
+      display: grid;
+      grid-template-columns: 170px 1fr;
+      gap: 10px;
+      border-bottom: 1px dashed #e5ecf5;
+      padding-bottom: 8px;
+      font-size: 13px;
+      line-height: 1.35;
+    }
+    .kv-row:last-child {
+      border-bottom: 0;
+      padding-bottom: 0;
+    }
+    .kv-key {
+      color: #607086;
+      font-weight: 700;
+    }
+    .kv-val {
+      color: #1f2d3f;
+      font-weight: 600;
+      word-break: break-word;
+    }
+
+    .history-table-wrap {
+      border: 1px solid #dde6f2;
+      border-radius: 10px;
+      overflow: auto;
+      max-height: 320px;
+    }
+    .history-table thead th {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      background: #f7faff;
+      box-shadow: inset 0 -1px 0 #d9e1ec;
+    }
+    .history-table tbody tr:nth-child(even) {
+      background: #fcfdff;
+    }
+
+    .trackview-footer {
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px solid #dde6f1;
+      text-align: center;
+      color: #6b7c92;
+      font-size: 11px;
+    }
+
+    @media (max-width: 980px) {
+      .summary-grid { grid-template-columns: 1fr; }
+      .lifecycle-wrap { grid-template-columns: 1fr; }
+      .details-grid { grid-template-columns: 1fr; }
+      .kv-row { grid-template-columns: 1fr; gap: 2px; }
+    }
+  </style>
+</head>
+<body>
+  <script>const BOOT = <?!= JSON.stringify(boot) ?>;</script>
+  <div class="page trackview-shell">
+    <div class="topbar">
+      <div class="brand"><span class="badge-dot"></span> Request Tracking</div>
+    </div>
+
+    <div id="notice" class="notice hidden"></div>
+
+    <div class="card">
+      <h2 id="titleText">Request Tracking Result</h2>
+      <p id="subtitleText" class="meta">Loading request details...</p>
+      <div id="summaryGrid" class="summary-grid hidden"></div>
+      <div class="actions" style="margin-top:12px;">
+        <a class="btn-neutral" id="searchAgainBtn" style="text-decoration:none;" href="<?!= boot.navUrls.track ?>">Track Another Request</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Workflow Progress</h3>
+      <div id="lifecycle" class="lifecycle-wrap"></div>
+    </div>
+
+    <div class="details-grid">
+      <div class="card">
+        <h3>Request Details</h3>
+        <div id="requestDetails" class="kv-grid"></div>
+      </div>
+      <div class="card">
+        <h3>Assignment Information</h3>
+        <div id="assignmentDetails" class="kv-grid"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Timeline History</h3>
+      <div class="history-table-wrap">
+        <table class="history-table">
+          <thead>
+            <tr>
+              <th>Timestamp</th>
+              <th>Action</th>
+              <th>Status</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody id="historyRows"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <footer class="trackview-footer">&copy; 2026 NETS Terminal Loan Workflow</footer>
+  </div>
+
+  <?!= include('Scripts'); ?>
+  <script>
+    const $ = id => document.getElementById(id);
+
+    function appUrlForPage(page, extraParams = {}) {
+      const normalizedPage = String(page || '').trim().toLowerCase();
+      const routed = (BOOT.navUrls && BOOT.navUrls[normalizedPage]) || '';
+      if (routed) {
+        const params = new URLSearchParams(extraParams);
+        const query = params.toString();
+        if (!query) return routed;
+        return `${routed}${routed.includes('?') ? '&' : '?'}${query}`;
+      }
+
+      const base = BOOT.appUrl || window.location.pathname;
+      const params = new URLSearchParams({ page, ...extraParams });
+      const joiner = String(base).includes('?') ? '&' : '?';
+      return `${base}${joiner}${params.toString()}`;
+    }
+
+    function normalizeRequestId(value) {
+      return String(value || '').trim().toUpperCase();
+    }
+
+    function pickRequestId() {
+      const bootParams = (BOOT && BOOT.params) ? BOOT.params : {};
+      return normalizeRequestId(
+        bootParams.requestId ||
+        bootParams.id ||
+        NLFClient.getParam('requestId') ||
+        NLFClient.getParam('id') ||
+        ''
+      );
+    }
+
+    function fmtDate(value) {
+      if (!value) return '-';
+      const dt = new Date(value);
+      if (Number.isNaN(dt.getTime())) return String(value);
+      return dt.toLocaleDateString();
+    }
+
+    function fmtDateTime(value) {
+      if (!value) return '-';
+      const dt = new Date(value);
+      if (Number.isNaN(dt.getTime())) return String(value);
+      return dt.toLocaleString();
+    }
+
+    function asText(value) {
+      const text = String(value === undefined || value === null ? '' : value).trim();
+      return text || '-';
+    }
+
+    function renderKeyValues(elementId, rows) {
+      $(elementId).innerHTML = rows.map(item => `
+        <div class="kv-row">
+          <div class="kv-key">${NLFClient.safe(item.label)}</div>
+          <div class="kv-val">${NLFClient.safe(item.value)}</div>
+        </div>
+      `).join('');
+    }
+
+    function renderSummary(request) {
+      $('titleText').textContent = `Request #${request.requestId}`;
+      $('subtitleText').textContent = `Current status: ${request.status}`;
+      $('searchAgainBtn').href = appUrlForPage('track');
+
+      $('summaryGrid').classList.remove('hidden');
+      $('summaryGrid').innerHTML = `
+        <div class="summary-item">
+          <p class="meta">Request ID</p>
+          <strong>${NLFClient.safe(asText(request.requestId))}</strong>
+        </div>
+        <div class="summary-item">
+          <p class="meta">Last Updated</p>
+          <strong>${NLFClient.safe(fmtDateTime(request.lastUpdated))}</strong>
+        </div>
+        <div class="summary-item">
+          <p class="meta">Current Status</p>
+          <strong>${NLFClient.safe(asText(request.status))}</strong>
+        </div>
+      `;
+    }
+
+    function renderLifecycle(steps) {
+      const lifecycle = $('lifecycle');
+      if (!steps || !steps.length) {
+        lifecycle.innerHTML = '<p class="meta">No lifecycle data available.</p>';
+        return;
+      }
+
+      lifecycle.innerHTML = steps.map(step => {
+        const classes = ['life-step'];
+        if (step.done) classes.push('done');
+        if (step.active) classes.push('active');
+        const detail = step.active ? 'Active step' : (step.done ? 'Completed' : 'Pending');
+
+        return `
+          <div class="${classes.join(' ')}">
+            <div class="life-dot"></div>
+            <h4>${NLFClient.safe(step.label)}</h4>
+            <p>${NLFClient.safe(detail)}</p>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderDetails(request) {
+      renderKeyValues('requestDetails', [
+        { label: 'Requester', value: asText(request.requesterName) },
+        { label: 'Division', value: asText(request.division) },
+        { label: 'Location', value: asText(request.location) },
+        { label: 'Item Requested', value: 'NETS Terminal' },
+        { label: 'Start Date', value: fmtDate(request.startDate) },
+        { label: 'End Date', value: fmtDate(request.endDate) },
+        { label: 'Reason', value: asText(request.reason) },
+        { label: 'Event Name', value: asText(request.eventName) }
+      ]);
+
+      renderKeyValues('assignmentDetails', [
+        { label: 'Terminal Assigned', value: asText(request.terminal) },
+        { label: 'Status', value: asText(request.status) },
+        { label: 'Submitted At', value: fmtDateTime(request.submittedAt) },
+        { label: 'Last Updated', value: fmtDateTime(request.lastUpdated) },
+        { label: 'GL Code', value: asText(request.glCode) },
+        { label: 'Cost Centre', value: asText(request.costCentre) },
+        { label: 'Special Tracking Code', value: asText(request.specialTrackingCode) },
+        { label: 'Remarks', value: asText(request.remarks) }
+      ]);
+    }
+
+    function renderHistory(history) {
+      const rows = $('historyRows');
+      if (!history || !history.length) {
+        rows.innerHTML = '<tr><td colspan="4" class="meta">No timeline history available.</td></tr>';
+        return;
+      }
+
+      rows.innerHTML = history.map(item => `
+        <tr>
+          <td>${NLFClient.safe(fmtDateTime(item.at))}</td>
+          <td>${NLFClient.safe(asText(item.actionType))}</td>
+          <td>${NLFClient.safe(asText(item.newStatus || item.status))}</td>
+          <td>${NLFClient.safe(asText(item.notes))}</td>
+        </tr>
+      `).join('');
+    }
+
+    async function loadTrackingResult() {
+      NLFClient.setNotice($('notice'), '', '');
+      const requestId = pickRequestId();
+
+      if (!requestId) {
+        NLFClient.setNotice($('notice'), 'bad', 'Request ID missing. Please enter a valid Request ID.');
+        $('subtitleText').textContent = 'No request ID in URL.';
+        return;
+      }
+
+      try {
+        const res = await NLFClient.run('apiGetTrackingByRequestId', { requestId });
+        if (!res || !res.ok) throw new Error((res && res.error) || 'Unable to load request.');
+
+        renderSummary(res.request || {});
+        renderLifecycle(res.workflow || []);
+        renderDetails(res.request || {});
+        renderHistory(res.history || []);
+      } catch (err) {
+        const msg = String(err && err.message ? err.message : err || '');
+        if (/not found/i.test(msg)) {
+          NLFClient.setNotice($('notice'), 'bad', 'Request not found. Please verify your Request ID.');
+        } else if (/invalid request id/i.test(msg)) {
+          NLFClient.setNotice($('notice'), 'bad', 'Invalid Request ID format.');
+        } else if (/required/i.test(msg)) {
+          NLFClient.setNotice($('notice'), 'bad', 'Request ID missing. Please verify and retry.');
+        } else {
+          NLFClient.setNotice($('notice'), 'bad', 'Unable to load tracking details. Please try again.');
+        }
+        $('subtitleText').textContent = 'Tracking data unavailable.';
+      }
+    }
+
+    $('searchAgainBtn').href = appUrlForPage('track');
+    loadTrackingResult();
+  </script>
+</body>
+</html>

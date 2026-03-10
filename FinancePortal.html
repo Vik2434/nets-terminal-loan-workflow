@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <?!= include('Styles'); ?>
+  <style>
+    .finance-shell { max-width: 1180px; }
+    .finance-intro h2 { margin-bottom: 6px; }
+    .filter-bar {
+      display: grid;
+      grid-template-columns: minmax(180px, 1fr) minmax(180px, 1fr) minmax(220px, 1.2fr);
+      gap: 10px;
+      align-items: end;
+    }
+    .filter-actions {
+      margin-top: 10px;
+      display: flex;
+      justify-content: flex-end;
+    }
+    .table-wrap {
+      border: 1px solid #d9e1ec;
+      border-radius: 10px;
+      overflow: auto;
+      max-height: 62vh;
+    }
+    .finance-table {
+      min-width: 1300px;
+      font-size: 13px;
+    }
+    .finance-table thead th {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      background: #f7faff;
+      box-shadow: inset 0 -1px 0 #d9e1ec;
+    }
+    .finance-table tbody tr:nth-child(even) {
+      background: #fcfdff;
+    }
+    .finance-table tbody tr:hover {
+      background: #f5f9ff;
+    }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+    .finance-footer {
+      margin-top: 12px;
+      padding: 10px 4px 4px;
+      border-top: 1px solid #dde6f1;
+      text-align: center;
+      color: #6b7c92;
+      font-size: 11px;
+    }
+    @media (max-width: 900px) {
+      .filter-bar {
+        grid-template-columns: 1fr;
+      }
+      .filter-actions {
+        justify-content: flex-start;
+      }
+      .table-wrap {
+        max-height: 56vh;
+      }
+    }
+  </style>
+</head>
+<body>
+  <script>const BOOT = <?!= JSON.stringify(boot) ?>;</script>
+  <div class="page finance-shell">
+    <div class="topbar">
+      <div class="brand"><span class="badge-dot"></span> Finance Portal</div>
+    </div>
+
+    <div id="notice" class="notice hidden"></div>
+
+    <div class="card finance-intro">
+      <h2>Finance Budget Visibility Portal</h2>
+      <p class="meta">Read-only view of loan requests and terminal assignment data for finance tracking.</p>
+      <p class="meta">Signed in as <strong id="viewerEmail">-</strong></p>
+    </div>
+
+    <div class="card">
+      <div class="filter-bar">
+        <div>
+          <label for="divisionFilter">Division</label>
+          <select id="divisionFilter">
+            <option value="">All divisions</option>
+          </select>
+        </div>
+        <div>
+          <label for="terminalFilter">Terminal</label>
+          <select id="terminalFilter">
+            <option value="">All terminals</option>
+          </select>
+        </div>
+        <div>
+          <label for="searchFilter">Search</label>
+          <input id="searchFilter" placeholder="Request ID or Requester Name">
+        </div>
+      </div>
+      <div class="filter-actions">
+        <button class="btn-neutral" id="clearFiltersBtn" type="button">Clear Filters</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="table-wrap">
+        <table class="finance-table">
+          <thead>
+            <tr>
+              <th>Request ID</th>
+              <th>Status</th>
+              <th>Requester Name</th>
+              <th>Division</th>
+              <th>GL Code</th>
+              <th>Cost Centre</th>
+              <th>Special Tracking Code</th>
+              <th>Terminal</th>
+              <th>Start Date</th>
+              <th>End Date</th>
+              <th>Submitted At</th>
+              <th>Last Updated</th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <footer class="finance-footer">&copy; 2026 NETS Terminal Loan Workflow</footer>
+  </div>
+
+  <?!= include('Scripts'); ?>
+  <script>
+    const $ = id => document.getElementById(id);
+    const state = { rows: [], filtered: [] };
+
+    function appUrlForPage(page, extraParams = {}) {
+      const normalizedPage = String(page || '').trim().toLowerCase();
+      const routed = (BOOT.navUrls && BOOT.navUrls[normalizedPage]) || '';
+      if (routed) {
+        const params = new URLSearchParams(extraParams);
+        const query = params.toString();
+        if (!query) return routed;
+        return `${routed}${routed.includes('?') ? '&' : '?'}${query}`;
+      }
+
+      const base = BOOT.appUrl || window.location.pathname;
+      const params = new URLSearchParams({ page, ...extraParams });
+      const joiner = String(base).includes('?') ? '&' : '?';
+      return `${base}${joiner}${params.toString()}`;
+    }
+
+    function parseLegacyBudgetCodes(text) {
+      const out = { glCode: '', costCentre: '', specialTrackingCode: '' };
+      const raw = String(text || '').trim();
+      if (!raw) return out;
+
+      raw.split('|').forEach(part => {
+        const bits = String(part || '').split(':');
+        if (bits.length < 2) return;
+        const key = bits.shift().trim().toUpperCase();
+        const value = bits.join(':').trim();
+        if (!value) return;
+        if (key === 'GL' || key === 'GLCODE' || key === 'GL CODE') out.glCode = value;
+        if (key === 'CC' || key === 'COSTCENTRE' || key === 'COST CENTRE') out.costCentre = value;
+        if (key === 'STC' || key === 'SPECIALTRACKINGCODE' || key === 'SPECIAL TRACKING CODE') out.specialTrackingCode = value;
+      });
+
+      return out;
+    }
+
+    function normalizeRow(row) {
+      const legacyBudget = parseLegacyBudgetCodes(row.budgetCodes || '');
+      const requestId = row.requestId || row.id || '-';
+      const requesterName = row.requesterName || row.requester || '-';
+      const division = row.division || row.department || '-';
+      const glCode = row.glCode || row.financeReference || legacyBudget.glCode || '';
+      const costCentre = row.costCentre || legacyBudget.costCentre || '';
+      const specialTrackingCode = row.specialTrackingCode || legacyBudget.specialTrackingCode || '';
+      const terminal = row.terminal || row.assignedTerminalId || '-';
+      const startDate = row.startDate || row.needDate || '-';
+      const endDate = row.endDate || row.returnDate || '-';
+      const submittedAt = row.submittedAt || row.requestDateTime || '-';
+      const lastUpdated = row.lastUpdated || row.updatedAt || row.requestDateTime || '-';
+
+      return {
+        requestId: String(requestId || '-'),
+        status: String(row.status || '-'),
+        requesterName: String(requesterName || '-'),
+        division: String(division || '-'),
+        glCode: String(glCode || ''),
+        costCentre: String(costCentre || ''),
+        specialTrackingCode: String(specialTrackingCode || ''),
+        terminal: String(terminal || '-'),
+        startDate: String(startDate || '-'),
+        endDate: String(endDate || '-'),
+        submittedAt: submittedAt,
+        lastUpdated: lastUpdated
+      };
+    }
+
+    function toDisplayDate(value) {
+      if (!value || value === '-') return '-';
+      const dt = new Date(value);
+      if (Number.isNaN(dt.getTime())) return String(value);
+      return dt.toLocaleString();
+    }
+
+    function populateFilters(filterData, rows) {
+      const divisions = Array.isArray(filterData && filterData.divisions) ? filterData.divisions.slice() : [];
+      const terminals = Array.isArray(filterData && filterData.terminals) ? filterData.terminals.slice() : [];
+
+      if (!divisions.length) {
+        rows.forEach(item => {
+          if (item.division && item.division !== '-' && divisions.indexOf(item.division) < 0) divisions.push(item.division);
+        });
+        divisions.sort();
+      }
+
+      if (!terminals.length) {
+        rows.forEach(item => {
+          if (item.terminal && item.terminal !== '-' && terminals.indexOf(item.terminal) < 0) terminals.push(item.terminal);
+        });
+        terminals.sort();
+      }
+
+      $('divisionFilter').innerHTML = `<option value="">All divisions</option>${divisions.map(v => `<option value="${NLFClient.safe(v)}">${NLFClient.safe(v)}</option>`).join('')}`;
+      $('terminalFilter').innerHTML = `<option value="">All terminals</option>${terminals.map(v => `<option value="${NLFClient.safe(v)}">${NLFClient.safe(v)}</option>`).join('')}`;
+    }
+
+    async function loadFeed() {
+      NLFClient.setNotice($('notice'), '', '');
+      try {
+        const res = await NLFClient.run('apiGetFinancePortalData');
+        if (!res.ok) throw new Error(res.error || 'Unable to load finance feed');
+
+        $('viewerEmail').textContent = res.userEmail || '-';
+
+        const incoming = Array.isArray(res.rows) ? res.rows : (Array.isArray(res.requests) ? res.requests : []);
+        state.rows = incoming.map(normalizeRow);
+        populateFilters(res.filters || {}, state.rows);
+        applyFilters();
+      } catch (err) {
+        NLFClient.setNotice($('notice'), 'bad', err.message);
+        state.rows = [];
+        renderRows([]);
+      } 
+    }
+
+    function applyFilters() {
+      const division = $('divisionFilter').value.trim().toLowerCase();
+      const terminal = $('terminalFilter').value.trim().toLowerCase();
+      const search = $('searchFilter').value.trim().toLowerCase();
+
+      state.filtered = state.rows.filter(item => {
+        if (division && String(item.division || '').toLowerCase() !== division) return false;
+        if (terminal && String(item.terminal || '').toLowerCase() !== terminal) return false;
+        if (search) {
+          const hay = `${item.requestId} ${item.requesterName}`.toLowerCase();
+          if (!hay.includes(search)) return false;
+        }
+        return true;
+      });
+
+      renderRows(state.filtered);
+    }
+
+    function renderRows(items) {
+      const body = $('rows');
+      if (!items.length) {
+        body.innerHTML = '<tr><td colspan="12" class="meta">No records match the selected filters.</td></tr>';
+        return;
+      }
+
+      body.innerHTML = items.map(item => `
+        <tr>
+          <td class="mono">${item.requestId && item.requestId !== '-' ? `<a href="${appUrlForPage('confirmation', { requestId: item.requestId })}"><strong>${NLFClient.safe(item.requestId)}</strong></a>` : '-'}</td>
+          <td><span class="${NLFClient.statusClass(item.status)}">${NLFClient.safe(item.status)}</span></td>
+          <td>${NLFClient.safe(item.requesterName)}</td>
+          <td>${NLFClient.safe(item.division)}</td>
+          <td>${NLFClient.safe(item.glCode || '-')}</td>
+          <td>${NLFClient.safe(item.costCentre || '-')}</td>
+          <td>${NLFClient.safe(item.specialTrackingCode || '-')}</td>
+          <td>${NLFClient.safe(item.terminal)}</td>
+          <td>${NLFClient.safe(item.startDate)}</td>
+          <td>${NLFClient.safe(item.endDate)}</td>
+          <td>${NLFClient.safe(toDisplayDate(item.submittedAt))}</td>
+          <td>${NLFClient.safe(toDisplayDate(item.lastUpdated))}</td>
+        </tr>
+      `).join('');
+    }
+
+    function clearFilters() {
+      $('divisionFilter').value = '';
+      $('terminalFilter').value = '';
+      $('searchFilter').value = '';
+      applyFilters();
+    }
+
+    $('divisionFilter').addEventListener('change', applyFilters);
+    $('terminalFilter').addEventListener('change', applyFilters);
+    $('searchFilter').addEventListener('input', applyFilters);
+    $('clearFiltersBtn').addEventListener('click', clearFilters);
+    loadFeed();
+  </script>
+</body>
+</html>

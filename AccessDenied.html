@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <?!= include('Styles'); ?>
+</head>
+<body>
+  <script>const BOOT = <?!= JSON.stringify(boot) ?>;</script>
+  <? var requestedPage = String((boot && boot.page) || '').toLowerCase().trim(); ?>
+  <? var pageLabel = 'this page'; ?>
+  <? var requiredAccess = 'an active internal account'; ?>
+  <? if (requestedPage === 'finance') { ?>
+    <? pageLabel = 'the Finance Portal'; ?>
+    <? requiredAccess = 'an active Finance or Admin role in User_Roles'; ?>
+  <? } else if (requestedPage === 'approval' || requestedPage === 'approve') { ?>
+    <? pageLabel = 'the Approval Dashboard'; ?>
+    <? requiredAccess = 'an active Approver or Admin role in User_Roles'; ?>
+  <? } else if (requestedPage === 'tech' || requestedPage === 'it') { ?>
+    <? pageLabel = 'the Tech Dashboard'; ?>
+    <? requiredAccess = 'an active Tech or Admin role in User_Roles'; ?>
+  <? } ?>
+  <div class="page">
+    <div class="card">
+      <h2>Access Denied</h2>
+      <p>You are signed in, but access to <?!= pageLabel ?> requires <?!= requiredAccess ?>.</p>
+      <p class="meta">Signed in as: <?!= boot.userEmail || 'Unknown' ?></p>
+      <p class="meta">Access is controlled by the active `User_Roles` sheet entry for your account.</p>
+      <p class="meta">If this looks incorrect, ask the administrator to confirm your email, Active flag, and role columns.</p>
+      <div class="actions">
+        <a class="btn-primary" style="text-decoration:none;" href="<?!= getPageUrl_('request') ?>">Open Request Form</a>
+        <a class="btn-neutral" style="text-decoration:none;" href="<?!= getPageUrl_('track') ?>">Open Tracking</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

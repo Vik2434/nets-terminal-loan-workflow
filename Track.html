@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <?!= include('Styles'); ?>
+  <style>
+    .track-shell { max-width: 760px; margin-top: 18px; }
+    .track-form { display: grid; gap: 12px; margin-top: 8px; }
+    .track-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .track-example {
+      margin-top: 8px;
+      font-size: 12px;
+      color: #5c6f87;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+    .track-footer {
+      margin-top: 14px;
+      padding-top: 10px;
+      border-top: 1px solid #dde6f1;
+      text-align: center;
+      color: #6b7c92;
+      font-size: 11px;
+    }
+  </style>
+</head>
+<body>
+  <script>const BOOT = <?!= JSON.stringify(boot) ?>;</script>
+  <div class="page track-shell">
+    <div class="topbar">
+      <div class="brand"><span class="badge-dot"></span> Request Tracking</div>
+    </div>
+
+    <div id="notice" class="notice hidden"></div>
+
+    <div class="card">
+      <h2 style="margin-bottom:8px;">Track the status of your IT hardware request</h2>
+      <p class="meta">Enter your Request ID to view lifecycle progress.</p>
+
+      <form id="trackForm" class="track-form" novalidate>
+        <div>
+          <label for="requestIdInput">Request ID</label>
+          <input id="requestIdInput" placeholder="REQ-20260308-349A4" autocomplete="off">
+        </div>
+        <div class="track-actions">
+          <button class="btn-primary" id="trackBtn" type="submit">Track Request</button>
+        </div>
+      </form>
+      <div class="track-example">Example: REQ-20260308-349A4</div>
+    </div>
+
+    <footer class="track-footer">&copy; 2026 NETS Terminal Loan Workflow</footer>
+  </div>
+
+  <?!= include('Scripts'); ?>
+  <script>
+    const $ = id => document.getElementById(id);
+
+    function appUrlForPage(page, extraParams = {}) {
+      const normalizedPage = String(page || '').trim().toLowerCase();
+      const routed = (BOOT.navUrls && BOOT.navUrls[normalizedPage]) || '';
+      if (routed) {
+        const params = new URLSearchParams(extraParams);
+        const query = params.toString();
+        if (!query) return routed;
+        return `${routed}${routed.includes('?') ? '&' : '?'}${query}`;
+      }
+
+      const base = BOOT.appUrl || window.location.pathname;
+      const params = new URLSearchParams({ page, ...extraParams });
+      const joiner = String(base).includes('?') ? '&' : '?';
+      return `${base}${joiner}${params.toString()}`;
+    }
+
+    function normalizeRequestId(value) {
+      return String(value || '').trim().toUpperCase();
+    }
+
+    function openTrackingResult(requestId) {
+      window.location.href = appUrlForPage('trackView', { requestId });
+    }
+
+    function handleSubmit(event) {
+      event.preventDefault();
+      NLFClient.setNotice($('notice'), '', '');
+
+      const requestId = normalizeRequestId($('requestIdInput').value);
+      if (!requestId) {
+        NLFClient.setNotice($('notice'), 'bad', 'Request ID is required.');
+        return;
+      }
+
+      openTrackingResult(requestId);
+    }
+
+    function init() {
+      const fromQuery = normalizeRequestId(
+        NLFClient.getParam('requestId') || NLFClient.getParam('id') || ''
+      );
+
+      if (fromQuery) {
+        openTrackingResult(fromQuery);
+        return;
+      }
+
+      $('trackForm').addEventListener('submit', handleSubmit);
+    }
+
+    init();
+  </script>
+</body>
+</html>
