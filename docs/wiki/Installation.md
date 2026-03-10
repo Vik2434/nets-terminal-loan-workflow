@@ -15,6 +15,8 @@
 5. Run `setupNetsLoanForm()`.
 6. Update the generated `Config` and `User_Roles` sheets.
 
+This repository keeps the active Apps Script files in the project root. That is intentional because HtmlService template names depend on the current filenames.
+
 ## Optional clasp Setup
 
 1. Copy `.clasp.json.example` to `.clasp.json`.
@@ -23,3 +25,4 @@
 
 For more detail, see [../SETUP.md](../SETUP.md).
 
+Apps Script-specific deployment notes: [Apps Script](Apps-Script.md)
